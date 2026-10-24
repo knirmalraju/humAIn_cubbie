@@ -1,6 +1,6 @@
 # RoomPeace
 
-**Raise it calmly. Agree on what's next.**
+**Say it safely, solve it fairly.**
 
 A Cubbie skill for college roommates: turn a private concern into a respectful request, consider the other person's response, propose a practical agreement, and follow up with consent.
 
