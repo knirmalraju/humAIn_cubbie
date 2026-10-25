@@ -14,10 +14,10 @@ const reveal = {
 };
 
 const STEPS = [
-  { n: "01", t: "Talk privately", d: "Each roommate tells their own agent what's going on, including the parts they'd rather not say out loud." },
-  { n: "02", t: "Approve what's shared", d: "A sharing preview shows exactly what leaves the chat. Reasons and complaints start unchecked." },
+  { n: "01", t: "Talk privately", d: "Each friend tells their own agent what's going on, including the parts they'd rather not say out loud." },
+  { n: "02", t: "Share by message", d: "A sharing preview shows exactly what leaves the chat. Reply with the numbered facts you permit. Reasons and complaints stay private by default." },
   { n: "03", t: "Agents negotiate", d: "The three agents trade proposals and counteroffers using only approved facts." },
-  { n: "04", t: "Everyone says yes", d: "The same version goes to all three roommates. It's final only when everyone approves it." },
+  { n: "04", t: "Everyone says yes", d: "Each friend sends “approve v1” in their own chat. All three must approve the same version." },
 ];
 
 const RULES = [
@@ -38,17 +38,19 @@ export default function Home() {
   async function create(demo: boolean) {
     setBusy(true);
     setError(null);
-    const res = await fetch("/api/rooms", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ names, demo }) });
-    const data = await res.json();
-    setBusy(false);
-    if (!res.ok) return setError(data.error ?? "Couldn't create the room.");
-    if (demo) return router.push(`/d/${data.demo}`);
-    setLinks(["a", "b", "c"].map((s, i) => ({ name: names[i], url: `${location.origin}/s/${data[s]}` })));
+    try {
+      const res = await fetch("/api/rooms", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ names, demo }) });
+      const data = await res.json();
+      if (!res.ok) return setError(data.error ?? "Couldn't create the room.");
+      if (demo) return router.push(`/d/${data.demo}`);
+      setLinks(["a", "b", "c"].map((s, i) => ({ name: names[i], url: `${location.origin}/s/${data[s]}` })));
+    } catch { setError("Couldn’t reach the server. Please try again."); }
+    finally { setBusy(false); }
   }
 
   return (
     <>
-      <TopBar chip="Track 2 · agent-to-agent">
+      <TopBar chip="Track 3 · group chat assistant">
         <button className="btn btn-primary" disabled={busy} onClick={() => create(true)}>Live demo <ArrowIcon size={14} /></button>
       </TopBar>
       <main className="shell">
@@ -56,10 +58,10 @@ export default function Home() {
           <div className="hero-copy">
             <motion.span className="eyebrow" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Three private agents · one shared agreement</motion.span>
             <motion.h1 className="display hero-title" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-              Roommate deals,<br /><em className="grad-iris">negotiated</em> <em className="grad-ember">kindly.</em>
+              Campus plans,<br /><em className="grad-iris">negotiated</em> <em className="grad-ember">kindly.</em>
             </motion.h1>
             <motion.p className="lede" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              Each roommate talks only to their own AI agent. The agents trade just what each person approved, work out who cleans when,
+              Each friend talks only to their own AI agent. The agents trade just what each person approved, find a dinner time and place that work,
               and nothing becomes final until all three say yes to the same version.
             </motion.p>
             <motion.div className="hero-ctas" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
@@ -69,8 +71,8 @@ export default function Home() {
               <a className="btn btn-lg" href="#start">Start a room for three</a>
             </motion.div>
             <motion.div className="muted" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-              <span><LockIcon size={12} /> Complaints stay private</span>
-              <span>· No sign-up</span>
+              <span><LockIcon size={12} /> Your reasons stay private</span>
+              <span>· Three people · four tabs</span>
               <span>· Fictional demo data</span>
             </motion.div>
           </div>
@@ -82,7 +84,7 @@ export default function Home() {
         <section className="section">
           <motion.div className="section-head" {...reveal}>
             <span className="eyebrow">How it works</span>
-            <h2 className="display section-title">From awkward text <em>to settled deal</em> in four steps.</h2>
+            <h2 className="display section-title">From “dinner sometime” <em>to “see you there”</em> in four steps.</h2>
           </motion.div>
           <div className="steps">
             {STEPS.map((s, i) => (
@@ -121,7 +123,7 @@ export default function Home() {
               <div className="card-body" style={{ padding: "var(--s-8)", gap: "var(--s-4)" }}>
                 <span className="eyebrow" style={{ color: "var(--iris)" }}>Live demo</span>
                 <h3 className="display" style={{ fontSize: "var(--t-2xl)" }}>Max, Jordan &amp; Sam, <em>four tabs</em></h3>
-                <p className="lede" style={{ fontSize: "var(--t-base)" }}>Play all three roommates in their own chat tabs, with a fourth tab for the agents’ negotiation. Real agents do the work.</p>
+                <p className="lede" style={{ fontSize: "var(--t-base)" }}>Play all three friends in their own chat tabs, with a fourth tab for the agents’ negotiation. Share permissions and approvals are sent as messages. Dinner venues and prices are fictional sample data.</p>
                 <motion.button className="btn btn-accent btn-lg" disabled={busy} onClick={() => create(true)} whileTap={{ scale: 0.98 }}>Start the demo <ArrowIcon /></motion.button>
               </div>
             </motion.div>
@@ -131,7 +133,7 @@ export default function Home() {
                 <h3 className="display" style={{ fontSize: "var(--t-2xl)" }}>Three people, <em>three private links</em></h3>
                 {!links ? (
                   <form style={{ display: "flex", flexDirection: "column", gap: 12 }} onSubmit={(e) => { e.preventDefault(); create(false); }}>
-                    {["Your name", "Roommate 2", "Roommate 3"].map((label, i) => (
+                    {["Your name", "Friend 2", "Friend 3"].map((label, i) => (
                       <label key={label} className="field">
                         {label}
                         <input value={names[i]} onChange={(e) => setNames((n) => n.map((x, j) => (j === i ? e.target.value : x)))} maxLength={40} required />
@@ -141,7 +143,7 @@ export default function Home() {
                   </form>
                 ) : (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <p style={{ margin: 0, color: "var(--fg-2)" }}>Each link opens one person&apos;s private agent. Keep yours and send the others to your roommates.</p>
+                    <p style={{ margin: 0, color: "var(--fg-2)" }}>Each link opens one person&apos;s private agent. Keep yours and send the others to your friends.</p>
                     {links.map((l, i) => (
                       <LinkRow key={l.url} label={i === 0 ? `${l.name}'s link (yours)` : `${l.name}'s link`} url={l.url} open={i === 0} />
                     ))}
@@ -154,7 +156,7 @@ export default function Home() {
         </section>
 
         <footer className="footer">
-          <span>RoomPeace · a Track 2 prototype</span>
+          <span>Count Me In · a Track 3 prototype</span>
           <span>All demo people and data are fictional.</span>
         </footer>
       </main>

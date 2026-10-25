@@ -3,17 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SeatView } from "@/lib/types";
 
-export type SeatAction =
-  | { action: "chat"; text: string }
-  | { action: "approveShare"; checked: string[] }
-  | { action: "nothingWillChange" }
-  | { action: "requestAmend"; text: string }
-  | { action: "sendAmend" }
-  | { action: "discardAmend" }
-  | { action: "approve"; version: number }
-  | { action: "done"; index: number }
-  | { action: "reminders"; on: boolean }
-  | { action: "retry" };
+export type SeatAction = { action: "chat"; text: string };
 
 export interface SeatHandle {
   view: SeatView | null;

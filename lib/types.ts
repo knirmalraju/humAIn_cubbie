@@ -32,6 +32,8 @@ export interface ApprovedFact {
 
 export interface ChatMsg {
   id: string;
+  /** Slack event ID for replay protection; never exposed in the shared view. */
+  externalId?: string;
   /** "notice" = an automatic Cubbie notification (e.g. a roommate finished his turn). */
   from: "student" | "agent" | "notice";
   text: string;
@@ -90,6 +92,8 @@ export interface Agreement {
 export interface AmendDraft {
   tasks: Task[];
   note: string;
+  id?: string;
+  baseVersion?: number;
 }
 
 export interface SeatState {
@@ -100,6 +104,7 @@ export interface SeatState {
   chat: ChatMsg[];
   /** Sharing preview awaiting the student's decision. */
   pending: ShareItem[] | null;
+  previewVersion?: number;
   /** Everything this student has approved for the other agent to see. */
   approved: ApprovedFact[];
   shareApproved: boolean;
@@ -122,7 +127,9 @@ export type RoomStatus =
   | "no_agreement";
 
 export interface Room {
+  transport?: "slack";
   id: string;
+  scenario?: "campus";
   demo: boolean;
   demoToken: string | null;
   createdAt: number;
@@ -156,6 +163,7 @@ export const nextUp = (ag: Agreement) => rotationOrder(ag.tasks).find((i) => !ag
 /** What one student's browser is allowed to see. */
 export interface SeatView {
   roomId: string;
+  scenario?: "campus";
   demo: boolean;
   seat: Seat;
   status: RoomStatus;

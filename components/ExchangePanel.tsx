@@ -1,12 +1,11 @@
 "use client";
 
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import type { ExchangeEntry, Seat, SeatView } from "@/lib/types";
+import type { ExchangeEntry, Seat } from "@/lib/types";
 import { MAX_DECLINES, SEATS, nextUp } from "@/lib/types";
 import { CheckIcon } from "./icons";
 import { Scene, type SceneMood } from "./Scene";
-import { nameOf } from "./names";
-import type { SeatHandle } from "./useSeat";
+import type { NegotiationView } from "@/lib/negotiation-view";
 
 const TAG: Record<ExchangeEntry["kind"], string> = {
   shared: "Shared · approved",
@@ -26,7 +25,7 @@ const TAG: Record<ExchangeEntry["kind"], string> = {
   error: "Error",
 };
 
-const STATUS: Record<SeatView["status"], { label: string; tone: string; live?: boolean }> = {
+const STATUS: Record<NegotiationView["status"], { label: string; tone: string; live?: boolean }> = {
   intake: { label: "Waiting for sharing previews", tone: "" },
   negotiating: { label: "Agents negotiating", tone: "accent", live: true },
   paused: { label: "Paused · asking everyone", tone: "warn" },
@@ -35,17 +34,16 @@ const STATUS: Record<SeatView["status"], { label: string; tone: string; live?: b
   no_agreement: { label: "No agreement", tone: "" },
 };
 
-function moodFor(v: SeatView): SceneMood {
+function moodFor(v: NegotiationView): SceneMood {
   if (v.status === "confirmed") return "agreed";
   if (v.status === "no_agreement") return "apart";
   if (v.negotiating || v.status === "negotiating") return "talking";
   return "idle";
 }
 
-export function ExchangePanel({ handle, onOpenSeat }: { handle: SeatHandle; onOpenSeat?: (s: Seat) => void }) {
-  const view = handle.view;
+export function ExchangePanel({ view, onOpenSeat }: { view: NegotiationView | null; onOpenSeat?: (s: Seat) => void }) {
   if (!view) return <div className="card" style={{ minHeight: 320 }} aria-busy="true" />;
-  const name = (s: Seat) => nameOf(view, s);
+  const name = (s: Seat) => view.people.find(p => p.seat === s)?.name ?? s;
   const st = STATUS[view.status];
 
   return (
@@ -56,7 +54,7 @@ export function ExchangePanel({ handle, onOpenSeat }: { handle: SeatHandle; onOp
       <div className="card-head" style={{ flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div className="title">Agent exchange</div>
-          <div className="muted">Shared channel · all three roommates can read it</div>
+          <div className="muted">Shared channel · all three friends can read it</div>
         </div>
         <span className={`badge ${st.tone}`}>{st.live && <span className="pulse" />}{st.label}{view.round === 2 ? " · round 2" : ""}</span>
         <div className="meter" aria-label={`${view.declined} of ${MAX_DECLINES} proposals declined`} title="Declined proposals before the agents pause">
@@ -72,7 +70,7 @@ export function ExchangePanel({ handle, onOpenSeat }: { handle: SeatHandle; onOp
         {view.error && (
           <div className="note err" role="alert" style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
             <span>{view.error}</span>
-            <button className="btn" onClick={() => handle.act({ action: "retry" })}>Retry</button>
+            <span className="muted">Send “retry” in your private chat.</span>
           </div>
         )}
 
@@ -89,7 +87,7 @@ export function ExchangePanel({ handle, onOpenSeat }: { handle: SeatHandle; onOp
           <AnimatePresence initial={false}>
             {view.exchange.map((e) => {
               const cls = e.from === "system" ? "agent-sys" : `agent-${e.from}`;
-              const who = e.from === "system" ? "RoomPeace" : `${name(e.from)}'s agent`;
+              const who = e.from === "system" ? "Count Me In" : `${name(e.from)}'s agent`;
               const showTerms = e.proposal && (e.kind === "propose" || e.kind === "counter");
               return (
                 <motion.div key={e.id} className={`ev ${cls}`} initial={{ opacity: 0, x: e.from === "b" ? 16 : -16 }} animate={{ opacity: 1, x: 0 }} layout="position">
@@ -132,7 +130,7 @@ export function ExchangePanel({ handle, onOpenSeat }: { handle: SeatHandle; onOp
 }
 
 /** The agreement as a physical card: tilts toward the pointer, stamps a seal when confirmed. */
-function AgreementCard({ view, name }: { view: SeatView; name: (s: Seat) => string }) {
+function AgreementCard({ view, name }: { view: NegotiationView; name: (s: Seat) => string }) {
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const rx = useSpring(useTransform(my, [-0.5, 0.5], [6, -6]), { stiffness: 200, damping: 20 });
@@ -143,7 +141,7 @@ function AgreementCard({ view, name }: { view: SeatView; name: (s: Seat) => stri
       <motion.div className="agreement none" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <span className="eyebrow">Outcome</span>
         <h2 className="display" style={{ fontSize: "var(--t-2xl)" }}>No agreement, <em>and that&apos;s okay.</em></h2>
-        <div style={{ color: "var(--fg-2)" }}>The approved constraints couldn&apos;t be reconciled. Nobody was committed to anything, and the original rota stands.</div>
+        <div style={{ color: "var(--fg-2)" }}>The approved constraints couldn&apos;t be reconciled. Nobody was committed to anything, and no outing is booked.</div>
       </motion.div>
     );
   }
@@ -152,7 +150,7 @@ function AgreementCard({ view, name }: { view: SeatView; name: (s: Seat) => stri
   const confirmed = view.status === "confirmed";
   const up = nextUp(ag);
   const statusOf = (v: number) => (v === ag.version ? { t: `Approved v${ag.version}`, c: "ok" } : v > 0 ? { t: `Voided · had v${v}`, c: "void" } : { t: "Pending", c: "" });
-  const approvedOf = (s: Seat) => (s === view.seat ? view.me.approvedVersion : view.others.find((o) => o.seat === s)?.approvedVersion ?? 0);
+  const approvedOf = (s: Seat) => (view.people.find(p => p.seat === s)?.approvedVersion ?? 0);
   const people = SEATS.map((s) => ({ seat: s, n: name(s), s: statusOf(approvedOf(s)) }));
 
   return (
@@ -179,7 +177,7 @@ function AgreementCard({ view, name }: { view: SeatView; name: (s: Seat) => stri
         </AnimatePresence>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap", transform: "translateZ(30px)" }}>
           <div>
-            <span className="eyebrow">Bathroom agreement</span>
+            <span className="eyebrow">{view.scenario === "campus" ? "Campus dinner plan · sample venues" : "Agreement"}</span>
             <h2 className="display" style={{ fontSize: "var(--t-2xl)" }}>{confirmed ? <>It&apos;s <em>settled.</em></> : <>Draft, <em>awaiting everyone.</em></>}</h2>
           </div>
           <span className="badge mono">v{ag.version}</span>
@@ -218,15 +216,12 @@ function AgreementCard({ view, name }: { view: SeatView; name: (s: Seat) => stri
 }
 
 /** Who is doing what right now. Status only: never anyone's private words. */
-function Presence({ view, onOpen }: { view: SeatView; onOpen?: (s: Seat) => void }) {
-  const people = [
-    { seat: view.seat, name: view.me.name, busy: view.me.busy, reviewing: Boolean(view.me.pending), shared: view.me.shareApproved },
-    ...view.others.map((o) => ({ seat: o.seat, name: o.name, busy: o.busy, reviewing: o.reviewing, shared: o.shareApproved })),
-  ].sort((a, b) => SEATS.indexOf(a.seat) - SEATS.indexOf(b.seat));
+function Presence({ view, onOpen }: { view: NegotiationView; onOpen?: (s: Seat) => void }) {
+  const people = view.people;
   const accepted = new Set(view.accepts);
   const proposer = view.currentProposal?.by;
   return (
-    <div className="presence" aria-label="Roommates' status">
+    <div className="presence" aria-label="Friends' status">
       {people.map((p) => {
         let label = p.shared ? "Shared" : "Not shared yet";
         if (view.status === "negotiating") label = proposer === p.seat ? "Proposed" : accepted.has(p.seat) ? "Agent accepted" : "Agent deciding";

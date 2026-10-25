@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useMemo, useState } from "react";
+import { negotiationFromSeat } from "@/lib/negotiation-view";
 import { ExchangePanel } from "@/components/ExchangePanel";
 import { SeatPanel } from "@/components/SeatPanel";
 import { Stepper } from "@/components/Stepper";
@@ -21,7 +22,7 @@ export default function SeatPage({ params }: { params: Promise<{ token: string }
       <>
         <TopBar />
         <main className="shell page" style={{ paddingTop: 48 }}>
-          <p className="lede">This link doesn&apos;t match a room. Ask your roommates for a new one, or start a new room.</p>
+          <p className="lede">This link doesn&apos;t match a room. Ask your friends for a new one, or start a new room.</p>
         </main>
       </>
     );
@@ -47,10 +48,10 @@ export default function SeatPage({ params }: { params: Promise<{ token: string }
         </div>
         <Tabs tabs={tabs} active={active} onChange={setActive} label="Your chats" />
         <TabPanel id="me" active={active}>
-          <SeatPanel handle={handle} onSent={() => setActive("neg")} />
+          <SeatPanel handle={handle} />
         </TabPanel>
         <TabPanel id="neg" active={active}>
-          <ExchangePanel handle={handle} />
+          <ExchangePanel view={negotiationFromSeat(handle.view)} />
         </TabPanel>
       </main>
     </>

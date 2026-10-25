@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { use, useEffect, useMemo, useState } from "react";
+import { negotiationFromSeat } from "@/lib/negotiation-view";
 import { ExchangePanel } from "@/components/ExchangePanel";
 import { SeatPanel } from "@/components/SeatPanel";
 import { Stepper } from "@/components/Stepper";
@@ -10,18 +11,9 @@ import { TopBar } from "@/components/TopBar";
 import { useSeat } from "@/components/useSeat";
 
 const LINES: Record<"a" | "b" | "c", string[]> = {
-  a: [
-    "It's my bathroom turn today, but I have an assignment tonight. I can clean tomorrow or on Saturday.",
-    "Also, honestly, I'm still annoyed about the hair in the sink last week.",
-  ],
-  b: [
-    "I have guests tonight. I need the bathroom clean before 6, and I could do it if someone takes my turn next Tuesday.",
-    "Kind of tired of always covering extra turns, to be honest.",
-  ],
-  c: [
-    "Saturday is my turn but I'm away all weekend. I can take any turn next week.",
-    "Also someone keeps leaving wet towels on the floor.",
-  ],
+  a: ["Let’s get dinner together. I’m free from 7 to 9 tonight, can spend up to $15, and can walk 10 minutes. I have a lab before then, but keep that reason private."],
+  b: ["I’m free from 6 to 8 tonight. I need vegetarian options, a meal under $12, and a walk of no more than 10 minutes. I need to leave by 8."],
+  c: ["I can join between 6:30 and 8:30 tonight, spend at most $10, and walk up to 5 minutes. Money is tight this month; don’t share that reason."],
 };
 
 const SEAT_TABS = ["a", "b", "c"] as const;
@@ -80,13 +72,13 @@ export default function DemoPage({ params }: { params: Promise<{ token: string }
       <main className="shell page" style={{ paddingTop: 28, gap: 12 }}>
         <motion.div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 20 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 760 }}>
-            <span className="eyebrow">Live demo · you play all three roommates</span>
+            <span className="eyebrow">Live demo · you play all three friends</span>
             <h1 className="display" style={{ fontSize: "var(--t-3xl)" }}>
-              <em className="grad-iris">Max</em>, <em className="grad-ember">Jordan</em> and <em className="grad-rose">Sam</em> share one bathroom.
+              <em className="grad-iris">Max</em>, <em className="grad-ember">Jordan</em> and <em className="grad-rose">Sam</em> make dinner happen.
             </h1>
             <p className="lede" style={{ fontSize: "var(--t-base)" }}>
-              Three separate Gemini agents. Each roommate tab is a private chat; the negotiation tab is where only approved facts are traded.
-              Sending a message takes you to the negotiation so you can watch what happens.
+              Three separate Gemini agents. Each person’s tab is a private chat; the negotiation tab is where only approved facts are traded.
+              Share facts, approve a plan, or request changes by messaging your own agent. Watch the agents in the negotiation tab.
             </p>
           </div>
           <Stepper view={anyView} />
@@ -96,11 +88,11 @@ export default function DemoPage({ params }: { params: Promise<{ token: string }
 
         {SEAT_TABS.map((s) => (
           <TabPanel key={s} id={s} active={active}>
-            <SeatPanel handle={handles[s]} suggestions={LINES[s]} onSent={() => setActive("neg")} />
+            <SeatPanel handle={handles[s]} suggestions={LINES[s]} />
           </TabPanel>
         ))}
         <TabPanel id="neg" active={active}>
-          <ExchangePanel handle={handles.a} onOpenSeat={(s) => setActive(s)} />
+          <ExchangePanel view={negotiationFromSeat(handles.a.view)} onOpenSeat={(s) => setActive(s)} />
         </TabPanel>
       </main>
     </>

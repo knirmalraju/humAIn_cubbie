@@ -8,15 +8,15 @@ const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: "RoomPeace",
-  description: "Private AI agents that help three roommates agree on household responsibilities.",
+  title: "Count Me In",
+  description: "Three private chats, one agent negotiation, and campus plans approved by message.",
 };
 
 export const viewport: Viewport = { themeColor: "#07080b" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
       <body>
         <Providers>{children}</Providers>
       </body>

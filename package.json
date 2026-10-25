@@ -7,18 +7,23 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "check": "tsx scripts/check-rules.mts"
+    "check": "tsx scripts/check-rules.mts && tsx scripts/check-chat.mts && tsx scripts/check-slack.mts",
+    "slack:check": "tsx scripts/slack/check.mts",
+    "slack": "tsx scripts/slack/run.mts"
   },
   "dependencies": {
     "@google/genai": "^2.31.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
+    "@slack/socket-mode": "^3.1.0",
+    "@slack/web-api": "^8.2.0",
     "framer-motion": "^14.6.0",
     "next": "^16.4.3",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "three": "^0.186.1",
-    "zod": "^4.1.12"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

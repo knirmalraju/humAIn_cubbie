@@ -5,9 +5,9 @@ export function TopBar({ chip, children }: { chip?: string; children?: React.Rea
   return (
     <header className="nav">
       <div className="shell nav-inner">
-        <Link href="/" className="brand" aria-label="RoomPeace home">
+        <Link href="/" className="brand" aria-label="Count Me In home">
           <BrandMark />
-          <span className="brand-word">RoomPeace</span>
+          <span className="brand-word">Count Me In</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           {chip && <span className="badge">{chip}</span>}

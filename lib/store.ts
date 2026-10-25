@@ -72,3 +72,8 @@ function safeEq(a: string, b: string) {
   const y = Buffer.from(b);
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
+
+export function findByRoomId(id: string): Room | undefined {
+  load();
+  return store.rooms.get(id);
+}
